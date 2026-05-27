@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iris-pipeline-runner
+  namespace: kubeflow
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  labels:
+    app: iris-mlops
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: runner
+        image: python:3.9
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+        envFrom:
+        - configMapRef:
+            name: iris-mlops-config
+        command: [sh, -c]
+        args:
+        - |
+          pip install kfp==2.16.1 --quiet && python -c "
+          import kfp, os
+          client = kfp.Client(host=os.environ['kfp_host'])
+          client.create_run_from_pipeline_package(
+              pipeline_file='/pipeline/iris_pipeline.yaml',
+              arguments={},
+              run_name='iris-run-from-argocd'
+          )
+          print('Pipeline run created!')
+          "
+        volumeMounts:
+        - name: pipeline-yaml
+          mountPath: /pipeline
+      volumes:
+      - name: pipeline-yaml
+        configMap:
+          name: iris-mlops-config
+          items:
+          - key: iris_pipeline.yaml
+            path: iris_pipeline.yaml

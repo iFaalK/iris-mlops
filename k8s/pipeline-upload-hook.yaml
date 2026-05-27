@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iris-pipeline-upload
+  namespace: kubeflow
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  labels:
+    app: iris-mlops
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: uploader
+        image: python:3.9
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+        command: [sh, -c]
+        args:
+        - |
+          pip install kfp==2.16.1 --quiet && python -c "
+          import kfp
+          client = kfp.Client(host='http://ml-pipeline.kubeflow.svc.cluster.local:8888')
+          try:
+              pipeline = client.upload_pipeline(
+                  pipeline_package_path='/pipeline/iris_pipeline.yaml',
+                  pipeline_name='iris-mlops-pipeline'
+              )
+              print(f'Uploaded: {pipeline.pipeline_id}')
+          except Exception as e:
+              print(f'Already exists or error: {e}')
+          "
+        volumeMounts:
+        - name: pipeline-yaml
+          mountPath: /pipeline
+      volumes:
+      - name: pipeline-yaml
+        configMap:
+          name: iris-mlops-config
+          items:
+          - key: iris_pipeline.yaml
+            path: iris_pipeline.yaml

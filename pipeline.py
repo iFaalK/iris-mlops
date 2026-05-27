@@ -85,6 +85,6 @@ def iris_pipeline():
 if __name__ == "__main__":
     kfp.compiler.Compiler().compile(
         pipeline_func=iris_pipeline,
-        package_path="../iris_pipeline.yaml"
+        package_path="iris_pipeline.yaml"
     )
     print("Pipeline compiled: iris_pipeline.yaml")
