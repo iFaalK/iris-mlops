@@ -25,7 +25,7 @@ spec:
         clf.fit(X_train, y_train)
         predictions = clf.predict(X_test)
         accuracy = accuracy_score(y_test, predictions)
-        print(f"run2")
+        print(f"run demo")
         print(f'Accuracy: {accuracy:.4f}')
         class_names = iris.target_names
         for i, pred in enumerate(predictions):
