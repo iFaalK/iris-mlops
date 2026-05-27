@@ -10,5 +10,3 @@ data:
   n_estimators: "100"
   test_size: "0.2"
   dataset: "iris"
-  pipeline_name: "iris-mlops-pipeline"
-  kfp_host: "http://ml-pipeline.kubeflow.svc.cluster.local:8888"

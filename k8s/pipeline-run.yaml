@@ -1,10 +1,13 @@
 ﻿apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  name: iris-prediction-job
+  generateName: iris-prediction-job
   namespace: kubeflow
   labels:
     app: iris-mlops
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   entrypoint: iris-pipeline
   templates:
@@ -20,12 +23,12 @@ spec:
         from sklearn.model_selection import train_test_split
         from sklearn.metrics import accuracy_score
         iris = load_iris()
-        X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            iris.data, iris.target, test_size=0.2, random_state=42)
         clf = RandomForestClassifier(n_estimators=100, random_state=42)
         clf.fit(X_train, y_train)
         predictions = clf.predict(X_test)
         accuracy = accuracy_score(y_test, predictions)
-        print(f'run demo 2')
         print(f'Accuracy: {accuracy:.4f}')
         class_names = iris.target_names
         for i, pred in enumerate(predictions):
