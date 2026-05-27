@@ -10,3 +10,4 @@ data:
   n_estimators: "100"
   test_size: "0.2"
   dataset: "iris"
+  TEST_AUTOSYNC: "it_works"
