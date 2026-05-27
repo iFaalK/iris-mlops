@@ -16,7 +16,7 @@ spec:
     automated:
       prune: true
       selfHeal: true
-  ignoreDifferences:                        # ← добавить это
+  ignoreDifferences:
   - group: argoproj.io
     kind: Workflow
     jsonPointers:
