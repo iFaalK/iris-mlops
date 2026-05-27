@@ -1,0 +1,12 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iris-mlops-config
+  namespace: kubeflow
+  labels:
+    app: iris-mlops
+data:
+  model_type: "RandomForestClassifier"
+  n_estimators: "100"
+  test_size: "0.2"
+  dataset: "iris"
