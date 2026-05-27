@@ -21,3 +21,4 @@ spec:
     kind: Workflow
     jsonPointers:
     - /metadata/name
+    - /status
