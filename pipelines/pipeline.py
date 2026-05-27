@@ -88,3 +88,5 @@ if __name__ == "__main__":
         package_path="iris_pipeline.yaml"
     )
     print("Pipeline compiled: iris_pipeline.yaml")
+
+    # Test CI run
