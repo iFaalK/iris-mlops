@@ -11,15 +11,14 @@ spec:
   - name: iris-pipeline
     container:
       image: python:3.9
-      command: [python, -c]
+      command: [sh, -c]
       args:
       - |
+        pip install scikit-learn==1.6.1 numpy==1.24.3 --quiet && python -c "
         from sklearn.datasets import load_iris
         from sklearn.ensemble import RandomForestClassifier
         from sklearn.model_selection import train_test_split
         from sklearn.metrics import accuracy_score
-        import subprocess
-        subprocess.run(['pip', 'install', 'scikit-learn==1.6.1'], capture_output=True)
         iris = load_iris()
         X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42)
         clf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -27,3 +26,7 @@ spec:
         predictions = clf.predict(X_test)
         accuracy = accuracy_score(y_test, predictions)
         print(f'Accuracy: {accuracy:.4f}')
+        class_names = iris.target_names
+        for i, pred in enumerate(predictions):
+            print(f'Sample {i+1}: predicted={class_names[pred]}')
+        "
