@@ -1,7 +1,7 @@
 ﻿apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: iris-prediction-job
+  generateName: iris-prediction-job-
   namespace: kubeflow
   labels:
     app: iris-mlops
