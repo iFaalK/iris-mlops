@@ -16,3 +16,8 @@ spec:
     automated:
       prune: true
       selfHeal: true
+  ignoreDifferences:                        # ← добавить это
+  - group: argoproj.io
+    kind: Workflow
+    jsonPointers:
+    - /metadata/name
