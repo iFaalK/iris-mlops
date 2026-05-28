@@ -69,8 +69,9 @@ def evaluate_model(model: Input[Model], metrics: Output[Metrics]):
     print(classification_report(y_test, predictions))
 
     metrics.log_metric("accuracy", float(accuracy))
-    metrics.log_metric("model_type", "RandomForest")
-    metrics.log_metric("n_estimators", 100)
+    metrics.log_metric("n_estimators", 100.0)
+
+    metrics.metadata["model_type"] = "RandomForest"
 
 
 @dsl.pipeline(
