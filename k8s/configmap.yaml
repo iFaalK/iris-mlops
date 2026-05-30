@@ -5,6 +5,8 @@ metadata:
   namespace: kubeflow
   labels:
     app: iris-mlops
+  annotations:
+    build-time: "0"
 data:
   MODEL_TYPE: "RandomForestClassifier"
   N_ESTIMATORS: "150"
