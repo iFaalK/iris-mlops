@@ -14,6 +14,9 @@ spec:
   - name: iris-pipeline
     container:
       image: python:3.9
+      envFrom:
+        - configMapRef:
+            name: iris-mlops-config
       command: [sh, -c]
       args:
       - |
