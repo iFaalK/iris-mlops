@@ -38,7 +38,7 @@ jobs:
 
     - name: Trigger ArgoCD (Update timestamp)
       run: |
-        sed -i "s/build-time: .*/build-time: \"$(date +'%Y%m%d%H%M%S')\"/" k8s/pipeline-run.yaml
+        sed -i "s/build-time: .*/build-time: \"$(date +'%Y%m%d%H%M%S')\"/" k8s/configmap.yaml
 
     - name: Commit and push compiled pipeline
       run: |
