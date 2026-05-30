@@ -1,40 +1,56 @@
-﻿apiVersion: argoproj.io/v1alpha1
-kind: Workflow
+﻿apiVersion: batch/v1
+kind: Job
 metadata:
-  generateName: iris-prediction-job-
+  name: iris-prediction-job
   namespace: kubeflow
-  labels:
-    app: iris-mlops
   annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
-  entrypoint: iris-pipeline
-  templates:
-  - name: iris-pipeline
-    container:
-      image: python:3.9
-      envFrom:
+  template:
+    spec:
+      containers:
+      - name: mlops-runner
+        image: python:3.9
+
+        envFrom:
         - configMapRef:
             name: iris-mlops-config
-      command: [sh, -c]
-      args:
-      - |
-        pip install scikit-learn==1.6.1 numpy==1.24.3 --quiet && python -c "
-        from sklearn.datasets import load_iris
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.model_selection import train_test_split
-        from sklearn.metrics import accuracy_score
-        iris = load_iris()
-        X_train, X_test, y_train, y_test = train_test_split(
-            iris.data, iris.target, test_size=0.2, random_state=42)
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-        accuracy = accuracy_score(y_test, predictions)
-        print(f'cd test')
-        print(f'Accuracy: {accuracy:.4f}')
-        class_names = iris.target_names
-        for i, pred in enumerate(predictions):
-            print(f'Sample {i+1}: predicted={class_names[pred]}')
-        "
+
+        command: ["sh", "-c"]
+        args:
+        - |
+          
+          pip install kfp==2.7.0 urllib3==1.26.15 --quiet
+          
+          echo "Создаем скрипт запуска..."
+          cat << 'EOF' > run_pipeline.py
+          import os
+          from kfp.client import Client
+
+          n_estimators = int(os.environ.get("N_ESTIMATORS", 100))
+          test_size = float(os.environ.get("TEST_SIZE", 0.2))
+          model_type = os.environ.get("MODEL_TYPE", "RandomForestClassifier")
+
+          print(f"Деревья={n_estimators}, Test_Size={test_size}")
+
+          client = Client()
+          run_result = client.create_run_from_pipeline_package(
+              pipeline_file='iris_pipeline.yaml', 
+              arguments={
+                  'n_estimators': n_estimators,
+                  'test_size': test_size,
+                  'model_type': model_type
+              },
+              experiment_name='Auto-GitOps-Experiment',
+              enable_caching=False
+          )
+          print(f"Run ID: {run_result.run_id}")
+          EOF
+          
+          wget https://raw.githubusercontent.com/iFaalK/iris-mlops/main/iris_pipeline.yaml
+        
+          python run_pipeline.py
+
+      restartPolicy: Never
+  backoffLimit: 1
