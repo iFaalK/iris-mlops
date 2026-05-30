@@ -23,7 +23,7 @@ def load_data(dataset: Output[Dataset]):
     base_image="python:3.9",
     packages_to_install=["scikit-learn==1.6.1", "pandas==2.0.3", "numpy==1.24.3"]
 )
-def train_model(dataset: Input[Dataset], model: Output[Model]):
+def train_model(dataset: Input[Dataset], model: Output[Model], n_estimators: int, test_size: float):
     import pandas as pd
     import pickle
     from sklearn.ensemble import RandomForestClassifier
@@ -35,10 +35,10 @@ def train_model(dataset: Input[Dataset], model: Output[Model]):
     y = df['target']
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42
+        X, y, test_size=test_size, random_state=42
     )
 
-    clf = RandomForestClassifier(n_estimators=100, random_state=42)
+    clf = RandomForestClassifier(n_estimators=n_estimators, random_state=42)
     clf.fit(X_train, y_train)
 
     print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
@@ -51,7 +51,7 @@ def train_model(dataset: Input[Dataset], model: Output[Model]):
     base_image="python:3.9",
     packages_to_install=["scikit-learn==1.6.1", "pandas==2.0.3", "numpy==1.24.3"]
 )
-def evaluate_model(model: Input[Model], metrics: Output[Metrics]):
+def evaluate_model(model: Input[Model], metrics: Output[Metrics], n_estimators: int, model_type: str):
     import pickle
     from sklearn.metrics import accuracy_score, classification_report
 
@@ -69,18 +69,33 @@ def evaluate_model(model: Input[Model], metrics: Output[Metrics]):
     print(classification_report(y_test, predictions))
 
     metrics.log_metric("accuracy", float(accuracy))
-    metrics.log_metric("n_estimators", 100.0)
+    metrics.log_metric("n_estimators", n_estimators)
 
-    metrics.metadata["model_type"] = "RandomForest"
+    metrics.metadata["model_type"] = model_type
 
 
 @dsl.pipeline(
     name="iris-mlops-pipeline"
 )
-def iris_pipeline():
+def iris_pipeline(
+        n_estimators: int = 100,
+        test_size: float = 0.2,
+        model_type: str = "RandomForestClassifier"
+):
     load_task = load_data()
-    train_task = train_model(dataset=load_task.outputs['dataset'])
-    evaluate_task = evaluate_model(model=train_task.outputs['model'])
+
+    train_task = train_model(
+        dataset=load_task.outputs['dataset'],
+        n_estimators=n_estimators,
+        test_size=test_size
+    )
+
+    evaluate_task = evaluate_model(
+        model=train_task.outputs['model'],
+        n_estimators=n_estimators,
+        model_type=model_type
+    )
+    evaluate_task.set_caching_options(False)
 
 
 if __name__ == "__main__":
