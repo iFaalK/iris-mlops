@@ -48,7 +48,7 @@ spec:
           print(f"Run ID: {run_result.run_id}")
           EOF
           
-          wget https://raw.githubusercontent.com/iFaalK/iris-mlops/main/pipelines/iris_pipeline.yaml
+          wget https://raw.githubusercontent.com/iFaalK/iris-mlops/master/pipelines/iris_pipeline.yaml
         
           python run_pipeline.py
 
