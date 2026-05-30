@@ -46,4 +46,4 @@ jobs:
         git add pipelines/iris_pipeline.yaml
         git add k8s/pipeline-run.yaml
         git commit -m "autocomp [skip ci]" || echo "Изменений нет"
-        git push
+        git push origin master
