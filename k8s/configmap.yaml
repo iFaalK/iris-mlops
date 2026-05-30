@@ -6,7 +6,7 @@ metadata:
   labels:
     app: iris-mlops
   annotations:
-    build-time: "20260530132201"
+    build-time: "20260530135001"
 data:
   MODEL_TYPE: "RandomForestClassifier"
   N_ESTIMATORS: "150"
