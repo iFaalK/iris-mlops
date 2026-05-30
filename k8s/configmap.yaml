@@ -7,7 +7,7 @@ metadata:
     app: iris-mlops
 data:
   model_type: "RandomForestClassifier"
-  n_estimators: "10"
+  n_estimators: "20"
   test_size: "0.2"
   dataset: "iris"
   TEST_AUTOSYNC: "it_works"
