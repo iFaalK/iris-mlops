@@ -1,5 +1,9 @@
 # PIPELINE DEFINITION
 # Name: iris-mlops-pipeline
+# Inputs:
+#    model_type: str [Default: 'RandomForestClassifier']
+#    n_estimators: int [Default: 100.0]
+#    test_size: float [Default: 0.2]
 components:
   comp-evaluate-model:
     executorLabel: exec-evaluate-model
@@ -9,6 +13,11 @@ components:
           artifactType:
             schemaTitle: system.Model
             schemaVersion: 0.0.1
+      parameters:
+        model_type:
+          parameterType: STRING
+        n_estimators:
+          parameterType: NUMBER_INTEGER
     outputDefinitions:
       artifacts:
         metrics:
@@ -31,6 +40,11 @@ components:
           artifactType:
             schemaTitle: system.Dataset
             schemaVersion: 0.0.1
+      parameters:
+        n_estimators:
+          parameterType: NUMBER_INTEGER
+        test_size:
+          parameterType: NUMBER_DOUBLE
     outputDefinitions:
       artifacts:
         model:
@@ -66,15 +80,16 @@ deploymentSpec:
 
           '
         - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
-          \ *\n\ndef evaluate_model(model: Input[Model], metrics: Output[Metrics]):\n\
-          \    import pickle\n    from sklearn.metrics import accuracy_score, classification_report\n\
-          \n    with open(model.path, 'rb') as f:\n        data = pickle.load(f)\n\
-          \n    clf = data['model']\n    X_test = data['X_test']\n    y_test = data['y_test']\n\
-          \n    predictions = clf.predict(X_test)\n    accuracy = accuracy_score(y_test,\
-          \ predictions)\n\n    print(f\"Accuracy: {accuracy:.4f}\")\n    print(classification_report(y_test,\
+          \ *\n\ndef evaluate_model(model: Input[Model], metrics: Output[Metrics],\
+          \ n_estimators: int, model_type: str):\n    import pickle\n    from sklearn.metrics\
+          \ import accuracy_score, classification_report\n\n    with open(model.path,\
+          \ 'rb') as f:\n        data = pickle.load(f)\n\n    clf = data['model']\n\
+          \    X_test = data['X_test']\n    y_test = data['y_test']\n\n    predictions\
+          \ = clf.predict(X_test)\n    accuracy = accuracy_score(y_test, predictions)\n\
+          \n    print(f\"Accuracy: {accuracy:.4f}\")\n    print(classification_report(y_test,\
           \ predictions))\n\n    metrics.log_metric(\"accuracy\", float(accuracy))\n\
-          \    metrics.log_metric(\"n_estimators\", 100.0)\n\n    metrics.metadata[\"\
-          model_type\"] = \"RandomForest\"\n\n"
+          \    metrics.log_metric(\"n_estimators\", n_estimators)\n\n    metrics.metadata[\"\
+          model_type\"] = model_type\n\n"
         image: python:3.9
     exec-load-data:
       container:
@@ -137,12 +152,13 @@ deploymentSpec:
 
           '
         - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
-          \ *\n\ndef train_model(dataset: Input[Dataset], model: Output[Model]):\n\
-          \    import pandas as pd\n    import pickle\n    from sklearn.ensemble import\
-          \ RandomForestClassifier\n    from sklearn.model_selection import train_test_split\n\
-          \n    df = pd.read_csv(dataset.path)\n\n    X = df.drop('target', axis=1)\n\
-          \    y = df['target']\n\n    X_train, X_test, y_train, y_test = train_test_split(\n\
-          \        X, y, test_size=0.3, random_state=42\n    )\n\n    clf = RandomForestClassifier(n_estimators=100,\
+          \ *\n\ndef train_model(dataset: Input[Dataset], model: Output[Model], n_estimators:\
+          \ int, test_size: float):\n    import pandas as pd\n    import pickle\n\
+          \    from sklearn.ensemble import RandomForestClassifier\n    from sklearn.model_selection\
+          \ import train_test_split\n\n    df = pd.read_csv(dataset.path)\n\n    X\
+          \ = df.drop('target', axis=1)\n    y = df['target']\n\n    X_train, X_test,\
+          \ y_train, y_test = train_test_split(\n        X, y, test_size=test_size,\
+          \ random_state=42\n    )\n\n    clf = RandomForestClassifier(n_estimators=n_estimators,\
           \ random_state=42)\n    clf.fit(X_train, y_train)\n\n    print(f\"Train\
           \ size: {len(X_train)}, Test size: {len(X_test)}\")\n\n    with open(model.path,\
           \ 'wb') as f:\n        pickle.dump({'model': clf, 'X_test': X_test, 'y_test':\
@@ -165,6 +181,11 @@ root:
               taskOutputArtifact:
                 outputArtifactKey: model
                 producerTask: train-model
+          parameters:
+            model_type:
+              componentInputParameter: model_type
+            n_estimators:
+              componentInputParameter: n_estimators
         taskInfo:
           name: evaluate-model
       load-data:
@@ -187,7 +208,26 @@ root:
               taskOutputArtifact:
                 outputArtifactKey: dataset
                 producerTask: load-data
+          parameters:
+            n_estimators:
+              componentInputParameter: n_estimators
+            test_size:
+              componentInputParameter: test_size
         taskInfo:
           name: train-model
+  inputDefinitions:
+    parameters:
+      model_type:
+        defaultValue: RandomForestClassifier
+        isOptional: true
+        parameterType: STRING
+      n_estimators:
+        defaultValue: 100.0
+        isOptional: true
+        parameterType: NUMBER_INTEGER
+      test_size:
+        defaultValue: 0.2
+        isOptional: true
+        parameterType: NUMBER_DOUBLE
 schemaVersion: 2.1.0
 sdkVersion: kfp-2.16.1
