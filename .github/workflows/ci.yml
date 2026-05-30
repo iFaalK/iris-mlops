@@ -35,10 +35,15 @@ jobs:
         
         ls -la | grep iris_pipeline.yaml
 
+    - name: Trigger ArgoCD (Update timestamp)
+      run: |
+        sed -i "s/build-time: .*/build-time: \"$(date +'%Y%m%d%H%M%S')\"/" k8s/pipeline-run.yaml
+
     - name: Commit and push compiled pipeline
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add pipelines/iris_pipeline.yaml
+        git add k8s/pipeline-run.yaml
         git commit -m "autocomp [skip ci]" || echo "Изменений нет"
         git push
