@@ -5,6 +5,7 @@ on:
     branches: [ "main", "master" ]
     paths:
       - 'pipelines/**'
+
   workflow_dispatch:
 
 jobs:
@@ -46,4 +47,4 @@ jobs:
         git add pipelines/iris_pipeline.yaml
         git add k8s/pipeline-run.yaml
         git commit -m "autocomp [skip ci]" || echo "Изменений нет"
-        git push origin master
+        git push origin HEAD:master
