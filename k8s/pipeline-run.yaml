@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
-    build-time: "0"
+    build-time: "20260530124006"
 spec:
   template:
     spec:
